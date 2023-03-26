@@ -1,4 +1,3 @@
-{% extends "shared/base.html" %}
 <!--
 this template is derived from a online tutorial, https://www.fastapitutorial.com/blog/fastapi-jinja-login/
 -->
@@ -25,12 +24,17 @@ this template is derived from a online tutorial, https://www.fastapitutorial.com
       </div>
     </div>
 
-
+    <body>
+      {% for mesg in get_flashed_messages() %}
+      <h1>{{ mesg }}</h1>
+      {% endfor %}
+    </body>
+    
     <div class="row my-5">
       <form method="POST">
         <div class="mb-3">
 	  <label>Username</label>
-          <input type="text" required placeholder="Username" name="Username" value="{{Username}}" class="form-control">
+          <input type="text" required placeholder="Username" name="username" value="{{username}}" class="form-control">
         </div>
         <div class="mb-3">
           <label>Password</label>

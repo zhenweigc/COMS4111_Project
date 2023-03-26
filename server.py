@@ -8,14 +8,19 @@ Go to http://localhost:8111 in your browser.
 A debugger such as "pdb" may be helpful for debugging.
 Read about it online.
 """
-import os
+import os, secrets, hashlib
   # accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, request, render_template, g, redirect, Response, session, flash
+from flask_login import login_required, current_user;
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
+
+#Secret key is needed for sessions
+sk = secrets.token_hex(256);
+app.config['SECRET_KEY'] = sk;
 
 
 #
@@ -188,10 +193,37 @@ def add():
 	return redirect('/')
 
 
-@app.route('/login')
+#Login code template is learnt from https://flask-login.readthedocs.io/en/latest/
+@app.route('/login',methods=['GET','POST'])
 def login():
-	abort(401)
-	this_is_never_executed()
+    if request.method == 'POST':
+        print(session);
+        print('User is trying to login.');
+        username = request.form['username'];
+        password = request.form['password'];
+        response = None;
+        auth = False;
+        #print(username);
+        #print(password);
+        fetched_user = g.conn.execute(text('select * from users where username = :usn'),
+                {'usn':username}).fetchone();
+        #print(fetched_user[1]);
+        salt = fetched_user[1];
+        salted = password + salt;
+        hashed = hashlib.sha256(salted.encode()).hexdigest();
+        if (hashed == fetched_user[2]):
+            auth = True;
+
+
+        if fetched_user is None or (not auth):
+            print('No such user');
+            response = "Invalid username or password";
+            flash(response, 'danger');
+            return redirect("login");
+
+
+
+    return render_template("login.html");
 
 
 if __name__ == "__main__":
