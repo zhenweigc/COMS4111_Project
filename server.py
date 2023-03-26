@@ -9,14 +9,19 @@ Go to http://localhost:8111 in your browser.
 A debugger such as "pdb" may be helpful for debugging.
 Read about it online.
 """
-import os
+import os, secrets, hashlib
   # accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, request, render_template, g, redirect, Response, session, flash
+from flask_login import login_required, current_user;
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
+
+#Secret key is needed for sessions
+sk = secrets.token_hex(256);
+app.config['SECRET_KEY'] = sk;
 
 
 #
@@ -59,6 +64,14 @@ with engine.connect() as conn:
 	# you need to commit for create, insert, update queries to reflect
 	conn.commit()
 
+metadata = MetaData();
+users = Table(
+    'users',
+    metadata,
+    Column('username', String, primary_key = True),
+    Column('salt', String),
+    Column('pw', String),
+)
 
 @app.before_request
 def before_request():
@@ -201,11 +214,94 @@ def add():
 	return redirect('/')
 
 
-@app.route('/login')
+#Login code template is learnt from https://flask-login.readthedocs.io/en/latest/
+@app.route('/login',methods=['GET','POST'])
 def login():
-	abort(401)
-	this_is_never_executed()
+    if session.get('username') is not None:
+        print("Already logged in");
+        return redirect("profile");
+    if request.method == 'POST':
+        print(session);
+        print('User is trying to login.');
+        username = request.form['username'];
+        password = request.form['password'];
+        response = None;
+        auth = False;
+        fetched_user = g.conn.execute(text('select * from users where username = :usn'),
+                {'usn':username}).fetchone();
+        if fetched_user is not None:
+            salt = fetched_user[1];
+            salted = password + salt;
+            hashed = hashlib.sha256(salted.encode()).hexdigest();
+            if (hashed == fetched_user[2]):
+                auth = True;
 
+        #incorrect login info
+        if fetched_user is None or (not auth):
+            print('No such user');
+            response = "Invalid username or password";
+            flash(response, 'error');
+            return redirect("login");
+        else:
+            print("User authenticated");
+            session.clear();
+            session['username'] = username;
+            return redirect("profile");
+
+
+    return render_template("login.html");
+
+#Display profile, serve as a sanity check for session
+#reference: https://www.digitalocean.com/community/tutorials/how-to-add-authentication-to-your-app-with-flask-login
+@app.route('/profile', methods=['GET'])
+def profile():
+    if session.get('username') is None:
+        flash("You have not logged in", 'error');
+        return redirect("info");
+    else:
+        return render_template('profile.html', name = session['username']);
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    session.clear();
+    flash("Successfully logged out!");
+    return redirect("login");
+
+@app.route('/register', methods=['GET','POST'])
+def register():
+    if session.get('username') is None and request.method == 'GET':
+        return render_template('register.html');
+    elif session.get('username') is not None:
+        flash("You have to logout before register.", 'error');
+        return redirect("info");
+    else:
+        print("User is trying to register.");
+        username = request.form['username'];
+        password = request.form['password'];
+        rpw = request.form['rpw'];
+        username_check = g.conn.execute(text('select * from users where username = :usn'),
+                {'usn':username}).fetchone();
+        print(username_check);
+        if username_check is not None:
+            flash("Username already taken",'error');
+            return render_template('register.html');
+        if password != rpw:
+            flash("Password does not match",'error');
+            return render_template('register.html', username = username);
+
+        salt = secrets.token_hex(8)
+        salted = password + salt;
+        hashed = hashlib.sha256(salted.encode()).hexdigest();
+        stmt = insert(users).values(username = username, salt = salt, pw = hashed);
+        print(stmt);
+        g.conn.execute(stmt);
+        g.conn.commit();
+        flash('Successfully registered');
+        return redirect('login');
+    
+@app.route('/info', methods=['GET'])
+def info():
+    return render_template('info.html');
 
 if __name__ == "__main__":
 	import click
