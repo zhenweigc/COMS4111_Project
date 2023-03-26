@@ -255,6 +255,12 @@ def profile():
     else:
         return render_template('profile.html', name = session['username']);
 
+@app.route('/logout', methods=['GET'])
+def logout():
+    session.clear();
+    flash("Successfully logged out!");
+    return redirect("login");
+
 if __name__ == "__main__":
 	import click
 
