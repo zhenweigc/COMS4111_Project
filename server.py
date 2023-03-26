@@ -203,24 +203,27 @@ def login():
         password = request.form['password'];
         response = None;
         auth = False;
-        #print(username);
-        #print(password);
         fetched_user = g.conn.execute(text('select * from users where username = :usn'),
                 {'usn':username}).fetchone();
-        #print(fetched_user[1]);
         salt = fetched_user[1];
         salted = password + salt;
         hashed = hashlib.sha256(salted.encode()).hexdigest();
         if (hashed == fetched_user[2]):
             auth = True;
 
-
+        #incorrect login info
         if fetched_user is None or (not auth):
             print('No such user');
             response = "Invalid username or password";
             flash(response, 'danger');
             return redirect("login");
-
+        else:
+            print("User authenticated");
+            session.clear();
+            session['username'] = username;
+            response = "Successfully login!";
+            flash(response);
+            return redirect("/");
 
 
     return render_template("login.html");
