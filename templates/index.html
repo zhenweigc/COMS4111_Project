@@ -8,20 +8,40 @@
 
 
 <body>
-  <h1>Some famous Computer Scientists</h1>
-  <div>{{data}}</div>
+  <h1>Game Search Engine</h1>
 
-  <div>
-    {% for n in data %}
-    <div>{{n}}</div>
-    {% endfor %}
-  </div>
+<p><a href="another">Login</a></p>
 
-<p><a href="another">Go to the other page</a></p>
+<p> <b> Inside the search box, you can either enter the game you want to search or the genre it belongs to, there are following possible genres: </b></p>
+<ul> <li> Indie </li> <li>RPG</li> <li>Simulation</li> <li>Action</li> <li>Adventure</li> <li>Third Person</li> <li>2D</li> <li>3D</li> <li>First Person</li> </ul>
 
-<form method="POST" action="/add">
-<p>Name of new computer scientist: <input type="text" name="name"> <input type="submit" value="Add"></p>
+<form method="POST" action="/search">
+<p>Enter the name you want to search: <input type="text" name="search_text"> <input type="submit" value="search"></p>
 </form>
+
+<p> Search results for {{ search_text }}</p>
+<table>
+	<tr>
+	  <th>Name</th>
+	  <th>Release_Date</th>
+	  <th>Price</th>
+	  <th>Media_Rating</th>
+	  <th>Age_restriction</th>
+	  <th>Developer</th>
+	</tr>
+
+	{% for res in game_res %}
+	<tr>
+	<th>{{res[0]}}</th>
+	<th>{{res[1]}}</th>
+	<th>{{res[2]}}</th>
+	<th>{{res[3]}}</th>
+	<th>{{res[4]}}</th>
+	<th>{{res[5]}}</th>
+	</tr>
+	{% endfor %}
+</table>
+
 
 </body>
 
