@@ -261,6 +261,10 @@ def logout():
     flash("Successfully logged out!");
     return redirect("login");
 
+@app.route('/register', methods=['GET','POST'])
+def register():
+    return render_template('register.html');
+
 if __name__ == "__main__":
 	import click
 
