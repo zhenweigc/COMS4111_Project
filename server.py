@@ -209,6 +209,9 @@ def add():
 #Login code template is learnt from https://flask-login.readthedocs.io/en/latest/
 @app.route('/login',methods=['GET','POST'])
 def login():
+    if session.get('username') is not None:
+        print("Already logged in");
+        return redirect("profile");
     if request.method == 'POST':
         print(session);
         print('User is trying to login.');
@@ -242,6 +245,15 @@ def login():
 
     return render_template("login.html");
 
+#Display profile, serve as a sanity check for session
+#reference: https://www.digitalocean.com/community/tutorials/how-to-add-authentication-to-your-app-with-flask-login
+@app.route('/profile', methods=['GET'])
+def profile():
+    if session.get('username') is None:
+        flash("You have not logged in", 'error');
+        return redirect("/");
+    else:
+        return render_template('profile.html', name = session['username']);
 
 if __name__ == "__main__":
 	import click
