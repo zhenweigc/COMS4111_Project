@@ -64,6 +64,14 @@ with engine.connect() as conn:
 	# you need to commit for create, insert, update queries to reflect
 	conn.commit()
 
+metadata = MetaData();
+users = Table(
+    'users',
+    metadata,
+    Column('username', String, primary_key = True),
+    Column('salt', String),
+    Column('pw', String),
+)
 
 @app.before_request
 def before_request():
@@ -238,9 +246,7 @@ def login():
             print("User authenticated");
             session.clear();
             session['username'] = username;
-            response = "Successfully login!";
-            flash(response);
-            return redirect("/");
+            return redirect("profile");
 
 
     return render_template("login.html");
@@ -251,7 +257,7 @@ def login():
 def profile():
     if session.get('username') is None:
         flash("You have not logged in", 'error');
-        return redirect("/");
+        return redirect("info");
     else:
         return render_template('profile.html', name = session['username']);
 
@@ -263,7 +269,39 @@ def logout():
 
 @app.route('/register', methods=['GET','POST'])
 def register():
-    return render_template('register.html');
+    if session.get('username') is None and request.method == 'GET':
+        return render_template('register.html');
+    elif session.get('username') is not None:
+        flash("You have to logout before register.", 'error');
+        return redirect("info");
+    else:
+        print("User is trying to register.");
+        username = request.form['username'];
+        password = request.form['password'];
+        rpw = request.form['rpw'];
+        username_check = g.conn.execute(text('select * from users where username = :usn'),
+                {'usn':username}).fetchone();
+        print(username_check);
+        if username_check is not None:
+            flash("Username already taken",'error');
+            return render_template('register.html');
+        if password != rpw:
+            flash("Password does not match",'error');
+            return render_template('register.html', username = username);
+
+        salt = secrets.token_hex(8)
+        salted = password + salt;
+        hashed = hashlib.sha256(salted.encode()).hexdigest();
+        stmt = insert(users).values(username = username, salt = salt, pw = hashed);
+        print(stmt);
+        g.conn.execute(stmt);
+        g.conn.commit();
+        flash('Successfully registered');
+        return redirect('login');
+    
+@app.route('/info', methods=['GET'])
+def info():
+    return render_template('info.html');
 
 if __name__ == "__main__":
 	import click

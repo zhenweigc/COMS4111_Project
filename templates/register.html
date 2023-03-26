@@ -22,6 +22,17 @@
                     <input class="input is-large" type="password" name="rpw" placeholder="Re-enter Password" required>
                </div>
             </div>
+    		
+	    	{% with messages = get_flashed_messages(with_categories=true) %}
+	    		{% if messages %}
+	    			<ul class=flashes>
+		    			{% for category, message in messages %}
+		    				<li class="{{ category }}">{{ message }}</li>
+		    			{% endfor %}
+	    			</ul>
+			{% endif %}
+		{% endwith %}
+    	</div>
 
             <button class="button is-block is-info is-large is-fullwidth">Register</button>
         </form>

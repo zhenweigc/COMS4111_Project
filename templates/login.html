@@ -16,13 +16,7 @@
                     <input class="input is-large" type="password" name="password" placeholder="Your Password">
                 </div>
             </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input type="checkbox" name="remember">
-                    Remember me
-                </label>
-	    </div
-	    	{% with messages = get_flashed_messages(with_categories=true) %}
+	    {% with messages = get_flashed_messages(with_categories=true) %}
 	    		{% if messages %}
 	    			<ul class=flashes>
 		    			{% for category, message in messages %}
