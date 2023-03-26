@@ -218,17 +218,18 @@ def login():
         auth = False;
         fetched_user = g.conn.execute(text('select * from users where username = :usn'),
                 {'usn':username}).fetchone();
-        salt = fetched_user[1];
-        salted = password + salt;
-        hashed = hashlib.sha256(salted.encode()).hexdigest();
-        if (hashed == fetched_user[2]):
-            auth = True;
+        if fetched_user is not None:
+            salt = fetched_user[1];
+            salted = password + salt;
+            hashed = hashlib.sha256(salted.encode()).hexdigest();
+            if (hashed == fetched_user[2]):
+                auth = True;
 
         #incorrect login info
         if fetched_user is None or (not auth):
             print('No such user');
             response = "Invalid username or password";
-            flash(response, 'danger');
+            flash(response, 'error');
             return redirect("login");
         else:
             print("User authenticated");
