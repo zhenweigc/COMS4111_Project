@@ -313,6 +313,14 @@ def register():
 def info():
     return render_template('info.html');
 
+@app.route('/liked-games', methods=['GET', 'POST'])
+def game_liked():
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('info');
+    else:
+        return render_template('liked-games.html');
+
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
     if session.get('username') is None:
@@ -356,6 +364,7 @@ def delete():
         else:
             flash('Incorrect password', 'error');
             return render_template('delete.html', current_user = session.get('username'));
+
 
 
 if __name__ == "__main__":

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="title">
+ Games Liked by {{username}}
+</h1>
+<div class="column is-4 is-offset-4">
+    {% if games_liked %}
+        <ul>
+        {% for game in games_liked %}
+            <li>{{ game.title }}</li>
+            <form method="POST" action="/unlike/{{ game.id }}">
+                <input type="submit" value="Unlike">
+            </form>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No games liked yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
