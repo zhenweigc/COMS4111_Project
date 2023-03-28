@@ -313,6 +313,51 @@ def register():
 def info():
     return render_template('info.html');
 
+@app.route('/delete', methods=['GET', 'POST'])
+def delete():
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('info');
+
+    if request.method == 'GET':
+        return render_template('delete.html', current_user = session.get('username'));
+    elif request.method == 'POST':
+        confirmation = (request.form.get('confirm-deletion') == 'on');
+        if not confirmation:
+            flash('You have to click the confirm checkbox', 'error');
+            return render_template('delete.html', current_user = session.get('username'));
+        password = request.form['password'];
+        auth = False;
+        fetched_user = g.conn.execute(text('select * from users where username = :usn'),
+                {'usn':session.get('username')}).fetchone();
+        salt = None;
+        pw = None;
+        if fetched_user is not None:
+            salt = fetched_user[1];
+            salted = password + salt;
+            hashed = hashlib.sha256(salted.encode()).hexdigest();
+            if (hashed == fetched_user[2]):
+                auth = True;
+        else:
+            print('major exception');
+            flash('Failure', 'error');
+            session.clear();
+            return redirect('login');
+        
+        if auth:
+            #Begin deletion.
+            stmt = users.delete().where(users.c.username == session.get('username'));
+            print(stmt);
+            g.conn.execute(stmt);
+            g.conn.commit();
+            session.clear();
+            flash('Account deleted.');
+            return redirect('info');
+        else:
+            flash('Incorrect password', 'error');
+            return render_template('delete.html', current_user = session.get('username'));
+
+
 if __name__ == "__main__":
 	import click
 
