@@ -73,6 +73,26 @@ users = Table(
     Column('pw', String),
 )
 
+user_liked_game = Table(
+    'user_liked_game',
+    metadata,
+    Column('username', String, primary_key = True),
+    Column('game_id', String, primary_key = True),
+)
+
+games = Table(
+    'game',
+    metadata,
+    Column('game_id', String, primary_key = True),
+    Column('name', String, nullable=False),
+    Column('release_date', Date),
+    Column('description', String),
+    Column('type', String, nullable=False),
+    Column('media_rating', Float),
+    Column('price', Float),
+    Column('age_restriction', Integer),
+)
+
 @app.before_request
 def before_request():
 	"""
@@ -313,13 +333,41 @@ def register():
 def info():
     return render_template('info.html');
 
-@app.route('/liked-games', methods=['GET', 'POST'])
+@app.route('/liked-games', methods=['GET'])
 def game_liked():
     if session.get('username') is None:
         flash('You have not logged in.', 'error');
         return redirect('info');
     else:
-        return render_template('liked-games.html');
+        fetched_games = g.conn.execute(text('select game_id from user_liked_game where username = :usn'),
+                {'usn' : session.get('username')}).fetchone();
+        if fetched_games is None:
+            return render_template('liked-games.html', username = session.get('username'), games_liked = None);
+        else:
+            fetched_games = g.conn.execute(text('select game_id from user_liked_game where username = :usn'),
+                    {'usn' : session.get('username')});
+
+            raw_list = [i for i in fetched_games];
+            lst = [];
+            for r in raw_list:
+                game_info = g.conn.execute(text('select game_id, name, Date(release_date) from game where game_id = :gid'),
+                        {'gid' : r[0]}).fetchone();
+                tmp = [game_info[0], game_info[1], game_info[2]];
+                lst.append(tmp);
+
+            return render_template('liked-games.html', username = session.get('username'), games_liked = lst);
+
+@app.route('/unlike/<id>', methods=['POST'])
+def unlike(id):
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('../info');
+    else:
+        stmt = user_liked_game.delete().where(user_liked_game.c.username == session.get('username')).where(user_liked_game.c.game_id == id);
+        g.conn.execute(stmt);
+        g.conn.commit();
+        return redirect('../liked-games');
+
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():

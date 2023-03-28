@@ -2,20 +2,36 @@
 
 {% block content %}
 <h1 class="title">
- Games Liked by {{username}}
+    Games Liked by {{username}}
 </h1>
 <div class="column is-4 is-offset-4">
     {% if games_liked %}
-        <ul>
-        {% for game in games_liked %}
-            <li>{{ game.title }}</li>
-            <form method="POST" action="/unlike/{{ game.id }}">
-                <input type="submit" value="Unlike">
-            </form>
-        {% endfor %}
-        </ul>
+        <table>
+            <thead>
+                <tr>
+                    <th>Game ID</th>
+                    <th>Game Name</th>
+                    <th>Date of Publish</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for game in games_liked %}
+                    <tr>
+                        <td>{{ game[0] }}</td>
+                        <td>{{ game[1] }}</td>
+                        <td>{{ game[2] }}</td>
+                        <td>
+                            <form method="POST" action="/unlike/{{ game[0] }}">
+                                <input type="submit" value="Unlike">
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
-        <p>No games liked yet.</p>
+        <p>You have not liked any games yet.</p>
     {% endif %}
 </div>
 {% endblock %}
