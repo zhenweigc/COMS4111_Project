@@ -73,6 +73,26 @@ users = Table(
     Column('pw', String),
 )
 
+user_liked_game = Table(
+    'user_liked_game',
+    metadata,
+    Column('username', String, primary_key = True),
+    Column('game_id', String, primary_key = True),
+)
+
+games = Table(
+    'game',
+    metadata,
+    Column('game_id', String, primary_key = True),
+    Column('name', String, nullable=False),
+    Column('release_date', Date),
+    Column('description', String),
+    Column('type', String, nullable=False),
+    Column('media_rating', Float),
+    Column('price', Float),
+    Column('age_restriction', Integer),
+)
+
 @app.before_request
 def before_request():
 	"""
@@ -263,9 +283,12 @@ def profile():
 
 @app.route('/logout', methods=['GET'])
 def logout():
-    session.clear();
-    flash("Successfully logged out!");
-    return redirect("login");
+    if session.get('username') is None:
+        return redirect('login');
+    else:
+        session.clear();
+        flash("Successfully logged out!");
+        return redirect("login");
 
 @app.route('/register', methods=['GET','POST'])
 def register():
@@ -279,6 +302,16 @@ def register():
         username = request.form['username'];
         password = request.form['password'];
         rpw = request.form['rpw'];
+
+        #check if username input is too long.
+        if len(username) > 20:
+            flash('Username exceeds 20 character!', 'error');
+            return render_template('register.html');
+
+        if len(password) <= 5:
+            flash('Passowrd must contain more than 5 characters.', 'error');
+            return render_template('register.html', username = username);
+
         username_check = g.conn.execute(text('select * from users where username = :usn'),
                 {'usn':username}).fetchone();
         print(username_check);
@@ -302,6 +335,88 @@ def register():
 @app.route('/info', methods=['GET'])
 def info():
     return render_template('info.html');
+
+@app.route('/liked-games', methods=['GET'])
+def game_liked():
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('info');
+    else:
+        fetched_games = g.conn.execute(text('select game_id from user_liked_game where username = :usn'),
+                {'usn' : session.get('username')}).fetchone();
+        if fetched_games is None:
+            return render_template('liked-games.html', username = session.get('username'), games_liked = None);
+        else:
+            fetched_games = g.conn.execute(text('select game_id from user_liked_game where username = :usn'),
+                    {'usn' : session.get('username')});
+
+            raw_list = [i for i in fetched_games];
+            lst = [];
+            for r in raw_list:
+                game_info = g.conn.execute(text('select game_id, name, Date(release_date) from game where game_id = :gid'),
+                        {'gid' : r[0]}).fetchone();
+                tmp = [game_info[0], game_info[1], game_info[2]];
+                lst.append(tmp);
+
+            return render_template('liked-games.html', username = session.get('username'), games_liked = lst);
+
+@app.route('/unlike/<id>', methods=['POST'])
+def unlike(id):
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('../info');
+    else:
+        stmt = user_liked_game.delete().where(user_liked_game.c.username == session.get('username')).where(user_liked_game.c.game_id == id);
+        g.conn.execute(stmt);
+        g.conn.commit();
+        return redirect('../liked-games');
+
+
+@app.route('/delete', methods=['GET', 'POST'])
+def delete():
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('info');
+
+    if request.method == 'GET':
+        return render_template('delete.html', current_user = session.get('username'));
+    elif request.method == 'POST':
+        confirmation = (request.form.get('confirm-deletion') == 'on');
+        if not confirmation:
+            flash('You have to click the confirm checkbox', 'error');
+            return render_template('delete.html', current_user = session.get('username'));
+        password = request.form['password'];
+        auth = False;
+        fetched_user = g.conn.execute(text('select * from users where username = :usn'),
+                {'usn':session.get('username')}).fetchone();
+        salt = None;
+        pw = None;
+        if fetched_user is not None:
+            salt = fetched_user[1];
+            salted = password + salt;
+            hashed = hashlib.sha256(salted.encode()).hexdigest();
+            if (hashed == fetched_user[2]):
+                auth = True;
+        else:
+            print('major exception');
+            flash('Failure', 'error');
+            session.clear();
+            return redirect('login');
+        
+        if auth:
+            #Begin deletion.
+            stmt = users.delete().where(users.c.username == session.get('username'));
+            print(stmt);
+            g.conn.execute(stmt);
+            g.conn.commit();
+            session.clear();
+            flash('Account deleted.');
+            return redirect('info');
+        else:
+            flash('Incorrect password', 'error');
+            return render_template('delete.html', current_user = session.get('username'));
+
+
 
 if __name__ == "__main__":
 	import click

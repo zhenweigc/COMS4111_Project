@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Delete Account</h3>
+    <div class="box">
+        <form method="POST" action="/delete">
+
+	<div class="field">
+                <div class="control">
+                    <p class="is-size-6">You are logged in as: {{ current_user }}</p>
+                </div>
+            </div>
+        
+	    <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" name="password" placeholder="Enter Your Password">
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox">
+                        <input type="checkbox" name="confirm-deletion">
+                        I confirm that I want to delete my account.
+                    </label>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <ul class=flashes>
+                        {% for category, message in messages %}
+                            <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+
+            <button class="button is-block is-danger is-large is-fullwidth">Delete Account</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
