@@ -283,9 +283,12 @@ def profile():
 
 @app.route('/logout', methods=['GET'])
 def logout():
-    session.clear();
-    flash("Successfully logged out!");
-    return redirect("login");
+    if session.get('username') is None:
+        return redirect('login');
+    else:
+        session.clear();
+        flash("Successfully logged out!");
+        return redirect("login");
 
 @app.route('/register', methods=['GET','POST'])
 def register():
