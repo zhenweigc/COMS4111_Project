@@ -279,6 +279,16 @@ def register():
         username = request.form['username'];
         password = request.form['password'];
         rpw = request.form['rpw'];
+
+        #check if username input is too long.
+        if len(username) > 20:
+            flash('Username exceeds 20 character!', 'error');
+            return render_template('register.html');
+
+        if len(password) <= 5:
+            flash('Passowrd must contain more than 5 characters.', 'error');
+            return render_template('register.html');
+
         username_check = g.conn.execute(text('select * from users where username = :usn'),
                 {'usn':username}).fetchone();
         print(username_check);
