@@ -287,7 +287,7 @@ def register():
 
         if len(password) <= 5:
             flash('Passowrd must contain more than 5 characters.', 'error');
-            return render_template('register.html');
+            return render_template('register.html', username = username);
 
         username_check = g.conn.execute(text('select * from users where username = :usn'),
                 {'usn':username}).fetchone();
