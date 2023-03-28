@@ -1,25 +1,61 @@
 <html>
-  <style>
-    body{ 
+ <head>
+   <style>
+ 
+    body{
       font-size: 15pt;
       font-family: arial;
+      background-color: #00D1B2;
     }
-  </style>
+    
+    .navbar{
+	position: fixed;
+	top:0;
+	right:0;
+	display:flex;
+	flex-direction:row;
+	align-items:center;
+	height:50px;
+	background-color: #00D1B2;
+	padding:0 10px;
+     }
+
+     .navbar a{
+	display:block;
+	padding:8px 16px;
+	text-decoration:none;
+	color:#666;
+     }
+
+     .navbar a:hover{
+	background-color:#ddd;
+	color:#000
+     }
+
+     .form {
+	padding-left: 50px;
+     }
+
+   </style>
+ </head>
 
 
 <body>
-  <h1>Game Search Engine</h1>
+  <div class="navbar">
+	<a class="active" href=".">Home</a>
+	<a href = "profile">Profile</a>
+	<a href = "login">Login</a>
+	<a href = "register">Register</a>
+  </div>
 
-<p><a href="login">Login</a></p>
-<p><a href="register">Register</a></p>
+<h1><b>Game Search Engine</b></h1>
 
-<p> <b> Inside the search box, you can either enter the game you want to search or the genre it belongs to, there are following possible genres: </b></p>
+<p style = > <b> Inside the search box, you can either enter the game you want to search or the genre it belongs to, there are following possible genres: </b></p>
 <ul> <li> Indie </li> <li>RPG</li> <li>Simulation</li> <li>Action</li> <li>Adventure</li> <li>Third Person</li> <li>2D</li> <li>3D</li> <li>First Person</li> </ul>
-
+ 
 <form method="POST" action="/search">
 <p>Enter the name you want to search: <input type="text" name="search_text"> <input type="submit" value="search"></p>
 </form>
-
 <p> Search results for {{ search_text }}</p>
 <table>
 	<tr>
