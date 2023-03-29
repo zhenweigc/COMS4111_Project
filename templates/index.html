@@ -66,8 +66,9 @@
 	  <th>Media_Rating</th>
 	  <th>Age_restriction</th>
 	  <th>Developer</th>
+	  <th></th>
+	  <th></th>
 	</tr>
-
 	{% for res in game_res %}
 	<tr>
 	<th>{{res[0]}}</th>
@@ -76,6 +77,21 @@
 	<th>{{res[3]}}</th>
 	<th>{{res[4]}}</th>
 	<th>{{res[5]}}</th>
+	{%if logged_in|default(false) %}
+	<td>
+		<form method="POST" action="/like/{{ res[6] }}">
+			<input type="submit" value="like">
+		</form>
+	</td>
+	<td>
+		<form method="POST" action="/dislike/{{ res[6] }}">
+			<input type="submit" value="dislike">
+		</form>
+	</td>
+	{%else%}
+	<td></td>
+	<td></td>
+	{% endif %}
 	</tr>
 	{% endfor %}
 </table>
