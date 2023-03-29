@@ -2,10 +2,10 @@
 
 {% block content %}
 <h1 class="title">
-    Games Liked by {{username}}
+    Games Disliked by {{username}}
 </h1>
 <div class="column is-4 is-offset-4">
-    {% if games_liked %}
+    {% if games_disliked %}
         <table>
             <thead>
                 <tr>
@@ -16,14 +16,14 @@
                 </tr>
             </thead>
             <tbody>
-                {% for game in games_liked %}
+                {% for game in games_disliked %}
                     <tr>
                         <td>{{ game[0] }}</td>
                         <td>{{ game[1] }}</td>
                         <td>{{ game[2] }}</td>
                         <td>
-                            <form method="POST" action="/unlike/{{ game[0] }}">
-                                <input type="submit" value="Unlike">
+                            <form method="POST" action="/remove/{{ game[0] }}">
+                                <input type="submit" value="remove">
                             </form>
                         </td>
                     </tr>
@@ -31,7 +31,7 @@
             </tbody>
         </table>
     {% else %}
-        <p>You have not like any games yet.</p>
+        <p>You have not dislike any games yet.</p>
     {% endif %}
 </div>
 {% endblock %}

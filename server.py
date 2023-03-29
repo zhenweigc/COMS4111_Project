@@ -80,6 +80,13 @@ user_liked_game = Table(
     Column('game_id', String, primary_key = True),
 )
 
+user_disliked_game = Table(
+    'user_disliked_game',
+    metadata,
+    Column('username', String, primary_key = True),
+    Column('game_id', String, primary_key = True),
+)
+
 games = Table(
     'game',
     metadata,
@@ -371,6 +378,41 @@ def unlike(id):
         g.conn.commit();
         return redirect('../liked-games');
 
+
+@app.route('/disliked-games', methods=['GET'])
+def game_disliked():
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('info');
+    else:
+        fetched_games = g.conn.execute(text('select game_id from user_disliked_game where username = :usn'),
+                {'usn' : session.get('username')}).fetchone();
+        if fetched_games is None:
+            return render_template('disliked-games.html', username = session.get('username'), games_disliked = None);
+        else:
+            fetched_games = g.conn.execute(text('select game_id from user_disliked_game where username = :usn'),
+                    {'usn' : session.get('username')});
+
+            raw_list = [i for i in fetched_games];
+            lst = [];
+            for r in raw_list:
+                game_info = g.conn.execute(text('select game_id, name, Date(release_date) from game where game_id = :gid'),
+                        {'gid' : r[0]}).fetchone();
+                tmp = [game_info[0], game_info[1], game_info[2]];
+                lst.append(tmp);
+
+            return render_template('disliked-games.html', username = session.get('username'), games_disliked = lst);
+
+@app.route('/remove/<id>', methods=['POST'])
+def remove(id):
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('../info');
+    else:
+        stmt = user_disliked_game.delete().where(user_disliked_game.c.username == session.get('username')).where(user_disliked_game.c.game_id == id);
+        g.conn.execute(stmt);
+        g.conn.commit();
+        return redirect('../disliked-games');
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
