@@ -214,8 +214,23 @@ def search():
     game_res = []
     for game in res:
         print(game)
-        game_res.append(game)
-    return render_template("index.html",game_res = game_res, search_text = search_text, logged_in = (session.get('username') is not None));
+        if (session.get('username') is not None):
+            tmp = g.conn.execute(text("select * from user_disliked_game where game_id = :gid and username like :usn"),
+                    {'gid': game[6], 'usn':session.get('username')}).fetchone();
+            if tmp is None:
+                game_res.append(game);
+        else:
+            game_res.append(game)
+
+    #Pull a list of liked games
+    lkg = [];
+    query = g.conn.execute(text("select game_id from user_liked_game where username like :usn"),
+            {'usn':session.get('username')});
+    for i in query:
+        lkg.append(i[0]);
+
+    print(lkg);
+    return render_template("index.html",game_res = game_res, search_text = search_text, liked_games = lkg, logged_in = (session.get('username') is not None));
 
 # Example of adding new data to the database
 @app.route('/add', methods=['POST'])
@@ -403,6 +418,29 @@ def remove(id):
         g.conn.execute(stmt);
         g.conn.commit();
         return redirect('../disliked-games');
+
+@app.route('/like/<id>', methods=['POST'])
+def like(id):
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('../info');
+    else:
+        stmt = insert(user_liked_game).values(username = session.get('username'), game_id = id);
+        g.conn.execute(stmt);
+        g.conn.commit();
+        return redirect('../liked-games');
+
+@app.route('/dislike/<id>', methods=['POST'])
+def dislike(id):
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('../info');
+    else:
+        stmt = insert(user_disliked_game).values(username = session.get('username'), game_id = id);
+        g.conn.execute(stmt);
+        g.conn.commit();
+        return redirect('../disliked-games');
+
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
