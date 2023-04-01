@@ -209,12 +209,28 @@ def search():
 #accessing search content
     search_text = request.form['search_text']
     search_text_special = '%'+search_text+'%'
-    res = g.conn.execute(text("select Game.game_id, name, date(release_date), price ,media_rating, age_restriction, game_dev.developer_name, Game.game_id from Game natural join game_genre inner join game_dev on Game.game_id = game_dev.game_id inner join game_pub on game.game_id = game_pub.game_id where name ilike :e1 or genre_name ilike :e2 group by Game.game_id, name, release_date, price ,media_rating, age_restriction, game_dev.developer_name"),{'e1':search_text_special, 'e2':search_text_special})
+    res = g.conn.execute(text("select name, date(release_date), price ,media_rating, age_restriction, game_dev.developer_name, Game.game_id from Game natural join game_genre inner join game_dev on Game.game_id = game_dev.game_id inner join game_pub on game.game_id = game_pub.game_id where name ilike :e1 or genre_name ilike :e2 group by Game.game_id, name, release_date, price ,media_rating, age_restriction, game_dev.developer_name"),{'e1':search_text_special, 'e2':search_text_special})
     #res = g.conn.execute(text(sql_search_text), [(search_text_special,)])
     game_res = []
     for game in res:
-        game_res.append(game)
-    return render_template("index.html",game_res = game_res, search_text = search_text, logged_in = (session.get('username') is not None));
+        print(game)
+        if (session.get('username') is not None):
+            tmp = g.conn.execute(text("select * from user_disliked_game where game_id = :gid and username like :usn"),
+                    {'gid': game[6], 'usn':session.get('username')}).fetchone();
+            if tmp is None:
+                game_res.append(game);
+        else:
+            game_res.append(game)
+
+    #Pull a list of liked games
+    lkg = [];
+    query = g.conn.execute(text("select game_id from user_liked_game where username like :usn"),
+            {'usn':session.get('username')});
+    for i in query:
+        lkg.append(i[0]);
+
+    print(lkg);
+    return render_template("index.html",game_res = game_res, search_text = search_text, liked_games = lkg, logged_in = (session.get('username') is not None));
 
 @app.route('/search_review', methods=['POST'])
 def search_review():
@@ -413,6 +429,29 @@ def remove(id):
         g.conn.execute(stmt);
         g.conn.commit();
         return redirect('../disliked-games');
+
+@app.route('/like/<id>', methods=['POST'])
+def like(id):
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('../info');
+    else:
+        stmt = insert(user_liked_game).values(username = session.get('username'), game_id = id);
+        g.conn.execute(stmt);
+        g.conn.commit();
+        return redirect('../liked-games');
+
+@app.route('/dislike/<id>', methods=['POST'])
+def dislike(id):
+    if session.get('username') is None:
+        flash('You have not logged in.', 'error');
+        return redirect('../info');
+    else:
+        stmt = insert(user_disliked_game).values(username = session.get('username'), game_id = id);
+        g.conn.execute(stmt);
+        g.conn.commit();
+        return redirect('../disliked-games');
+
 
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
