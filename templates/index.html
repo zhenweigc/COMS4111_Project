@@ -72,24 +72,32 @@
 	</tr>
 	{% for res in game_res %}
 	<tr>
+	<th>{{res[6]}}</th>
 	<th>{{res[0]}}</th>
 	<th>{{res[1]}}</th>
-	<th>{{res[2].strftime("%Y-%m")}}</th>
+	<th>{{res[2]}}</th>
 	<th>{{res[3]}}</th>
 	<th>{{res[4]}}</th>
 	<th>{{res[5]}}</th>
-	<th>{{res[6]}}</th>
-	{%if logged_in|default(false) %}
-	<td>
-		<form method="POST" action="/like/{{ res[6] }}">
-			<input type="submit" value="like">
-		</form>
-	</td>
-	<td>
-		<form method="POST" action="/dislike/{{ res[6] }}">
-			<input type="submit" value="dislike">
-		</form>
-	</td>
+	{%if logged_in|default(false)%}
+		{%if res[6] not in liked_games|default([])%}
+		<td>
+			<form method="POST" action="/like/{{ res[6] }}">
+				<input type="submit" value="like">
+			</form>
+		</td>
+		<td>
+			<form method="POST" action="/dislike/{{ res[6] }}">
+				<input type="submit" value="dislike">
+			</form>
+		</td>
+		{% else %}
+		<td>
+			<form method="POST" action="/unlike/{{ res[6] }}">
+				<input type="submit" value="Unlike">
+			</form>
+		</td>
+		{% endif %}
 	{%else%}
 	<td></td>
 	<td></td>
