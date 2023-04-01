@@ -215,6 +215,7 @@ def search():
     for game in res:
         print(game)
         if (session.get('username') is not None):
+	    
             tmp = g.conn.execute(text("select * from user_disliked_game where game_id = :gid and username like :usn"),
                     {'gid': game[6], 'usn':session.get('username')}).fetchone();
             if tmp is None:
@@ -235,12 +236,11 @@ def search():
 @app.route('/search_review', methods=['POST'])
 def search_review():
     game_id = request.form['game_id']
-    print(game_id) 
-    res = g.conn.execute(text('select user_id, user_comments_on_review, on_record_playtime from review where game_id = :e3'), {'e3':game_id}) 
-    review_ls = []  
+    res = g.conn.execute(text('select user_id, recommend, user_comments_on_review, on_record_playtime from review where game_id = :e3'), {'e3':game_id}) 
+    review_ls = []
     for review in res:
-    	review_ls.append(review)
-    print(review_ls)
+        recommend = "Negative" if review[1] == 0 else "Positive"
+        review_ls.append((review[0], recommend, review[2], review[3]))
     return render_template("index.html",review_ls = review_ls)
 
 # Example of adding new data to the database

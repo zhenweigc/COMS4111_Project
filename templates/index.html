@@ -114,14 +114,16 @@
 <table>
         <tr>
           <th>User_id</th>
+	  <th>Recommended</th>
           <th>Comments</th>
           <th>Play_time</th>
         </tr>
         {% for review in review_ls %}
         <tr>
         <th>{{review[0]}}</th>
-        <th>{{review[1]}}</th>
+	<th>{{review[1]}}</th>
         <th>{{review[2]}}</th>
+        <th>{{review[3]}}</th>
 	{% endfor %}
 </table>
 
