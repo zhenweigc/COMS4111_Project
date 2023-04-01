@@ -232,6 +232,17 @@ def search():
     print(lkg);
     return render_template("index.html",game_res = game_res, search_text = search_text, liked_games = lkg, logged_in = (session.get('username') is not None));
 
+@app.route('/search_review', methods=['POST'])
+def search_review():
+    game_id = request.form['game_id']
+    print(game_id) 
+    res = g.conn.execute(text('select user_id, user_comments_on_review, on_record_playtime from review where game_id = :e3'), {'e3':game_id}) 
+    review_ls = []  
+    for review in res:
+    	review_ls.append(review)
+    print(review_ls)
+    return render_template("index.html",review_ls = review_ls)
+
 # Example of adding new data to the database
 @app.route('/add', methods=['POST'])
 def add():

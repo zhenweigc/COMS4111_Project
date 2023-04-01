@@ -60,6 +60,7 @@
 <p> Search results for {{ search_text }}</p>
 <table>
 	<tr>
+	  <th>Game_id</th>
 	  <th>Name</th>
 	  <th>Release_Date</th>
 	  <th>Price</th>
@@ -73,7 +74,7 @@
 	<tr>
 	<th>{{res[0]}}</th>
 	<th>{{res[1]}}</th>
-	<th>{{res[2]}}</th>
+	<th>{{res[2].strftime("%Y-%m")}}</th>
 	<th>{{res[3]}}</th>
 	<th>{{res[4]}}</th>
 	<th>{{res[5]}}</th>
@@ -104,6 +105,24 @@
 	{% endfor %}
 </table>
 
+<p> After you find the game_id of interested game, you can put in here to find related reviews from users </p>
+<form method="POST" action="/search_review">
+<p>Enter the game_id you want to search: <input type="text" name="game_id"> <input type="submit" value="search"></p>
+</form>
+
+<table>
+        <tr>
+          <th>User_id</th>
+          <th>Comments</th>
+          <th>Play_time</th>
+        </tr>
+        {% for review in review_ls %}
+        <tr>
+        <th>{{review[0]}}</th>
+        <th>{{review[1]}}</th>
+        <th>{{review[2]}}</th>
+	{% endfor %}
+</table>
 
 </body>
 
