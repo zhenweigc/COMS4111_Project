@@ -209,13 +209,23 @@ def search():
 #accessing search content
     search_text = request.form['search_text']
     search_text_special = '%'+search_text+'%'
-    res = g.conn.execute(text("select name, date(release_date), price ,media_rating, age_restriction, game_dev.developer_name, Game.game_id from Game natural join game_genre inner join game_dev on Game.game_id = game_dev.game_id inner join game_pub on game.game_id = game_pub.game_id where name ilike :e1 or genre_name ilike :e2 group by Game.game_id, name, release_date, price ,media_rating, age_restriction, game_dev.developer_name"),{'e1':search_text_special, 'e2':search_text_special})
+    res = g.conn.execute(text("select Game.game_id, name, date(release_date), price ,media_rating, age_restriction, game_dev.developer_name, Game.game_id from Game natural join game_genre inner join game_dev on Game.game_id = game_dev.game_id inner join game_pub on game.game_id = game_pub.game_id where name ilike :e1 or genre_name ilike :e2 group by Game.game_id, name, release_date, price ,media_rating, age_restriction, game_dev.developer_name"),{'e1':search_text_special, 'e2':search_text_special})
     #res = g.conn.execute(text(sql_search_text), [(search_text_special,)])
     game_res = []
     for game in res:
-        print(game)
         game_res.append(game)
     return render_template("index.html",game_res = game_res, search_text = search_text, logged_in = (session.get('username') is not None));
+
+@app.route('/search_review', methods=['POST'])
+def search_review():
+    game_id = request.form['game_id']
+    print(game_id) 
+    res = g.conn.execute(text('select user_id, user_comments_on_review, on_record_playtime from review where game_id = :e3'), {'e3':game_id}) 
+    review_ls = []  
+    for review in res:
+    	review_ls.append(review)
+    print(review_ls)
+    return render_template("index.html",review_ls = review_ls)
 
 # Example of adding new data to the database
 @app.route('/add', methods=['POST'])
