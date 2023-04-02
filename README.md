@@ -24,4 +24,7 @@ Finally, users can logout and clear their session by clicking 'logout'.
 
 # Database URLs:
 We used the first database, which has an ip address of 34.148.107.47
-The account is still 'fl2627'.
+
+The DB account is still 'fl2627'.
+
+The external IP for the VM instance is 
